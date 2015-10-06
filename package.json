@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "dotenv": "^1.2.0",
+    "pg": "~4.4.2",
+    "minimist": "^1.2.0"
+  }
+}
