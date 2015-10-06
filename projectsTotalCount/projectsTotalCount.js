@@ -16,7 +16,8 @@ exports.handler = function(event, context) {
                 return console.error('error running query', err);
             }
             var results = result.rows.reduce(function(total, row) {
-                total[row.school_state.toString()] = parseInt(row.total_projects);
+                var base = total[row.school_state.toString().toUpperCase()] || 0;
+                total[row.school_state.toString().toUpperCase()] = parseInt(row.total_projects) + base;
                 return total;
             }, {});
             console.log(results);
