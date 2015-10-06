@@ -9,21 +9,18 @@ exports.handler = function(event, context) {
             context.fail(err);
             return console.error('error fetching client from pool', err);
         }
-        client.query("SELECT school_state, COUNT(school_state) AS total_projects FROM donorschoose_projects GROUP BY school_state", function(err, result) {
+        client.query("SELECT UPPER(school_state) AS state, COUNT(1) AS total_projects FROM donorschoose_projects GROUP BY state", function(err, result) {
             done();
 
             if(err) {
                 return console.error('error running query', err);
             }
             var results = result.rows.reduce(function(total, row) {
-                var base = total[row.school_state.toString().toUpperCase()] || 0;
-                total[row.school_state.toString().toUpperCase()] = parseInt(row.total_projects) + base;
+                total[row.state] = parseInt(row.total_projects);
                 return total;
             }, {});
             console.log(results);
             context.succeed(results);
-
         });
     });
-
 };
