@@ -22,21 +22,20 @@ exports.handler = function(event, context) {
                 if(err) {
                     return console.error('error running query', err);
                 }
-                var average = devAvgResult.rows[0].average;
-                var standardDeviation = devAvgResult.rows[0].standard_deviation;
+                var average = parseInt(devAvgResult.rows[0].average);
+                var standardDeviation = parseInt(devAvgResult.rows[0].standard_deviation);
 
                 var results = groupResult.rows.reduce(function(total, row) {
                     var totalDonations = parseInt(row.total);
-                    var devDiff = devDiffResult(totalDonations);
+                    var diff = totalDonations - average;
+                    var devDiff = diff / standardDeviation;
                     total[row.state] = {
                         "total" : totalDonations,
-                        "devDiff" : devDiff
+                        "devDiff" : devDiff,
+                        "diff" : diff
                     };
                     return total;
                 }, {});
-                function devDiffResult(totalDonations) {
-                    return (totalDonations - average) / standardDeviation;
-                }
                 console.log(results);
                 context.succeed(results);
             });
