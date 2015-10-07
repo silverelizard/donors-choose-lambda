@@ -13,7 +13,7 @@ exports.handler = function(event, context) {
                 context.fail(err);
                 return console.error('error fetching client from pool', err);
             }
-            client.query("SELECT COUNT(*) AS total_projects FROM donorschoose_projects WHERE school_state = $1", [state], function(err, result) {
+            client.query("SELECT COUNT(*) AS total_projects, COUNT(CASE WHEN funding_status = 'completed' THEN 1 END) AS completed_projects, COUNT(CASE WHEN funding_status = 'live' THEN 1 END) AS live_projects, SUM(num_donors) AS num_donors FROM donorschoose_projects WHERE school_state = $1", [state], function(err, result) {
                 done();
 
                 if(err) {
