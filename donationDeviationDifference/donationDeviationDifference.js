@@ -9,18 +9,38 @@ exports.handler = function(event, context) {
             context.fail(err);
             return console.error('error fetching client from pool', err);
         }
-        client.query("SELECT UPPER(school_state) AS state, COUNT(1) AS total_projects FROM donorschoose_projects GROUP BY state", function(err, result) {
-            done();
+        var stateGroupQuery = "SELECT UPPER(school_state) AS state, SUM(total_donations) AS total FROM donorschoose_projects GROUP BY state";
+        client.query(stateGroupQuery, function(err, groupResult) {
+
 
             if(err) {
                 return console.error('error running query', err);
             }
-            var results = result.rows.reduce(function(total, row) {
-                total[row.state] = parseInt(row.total_projects);
-                return total;
-            }, {});
-            console.log(results);
-            context.succeed(results);
+            var devAvgQuery = "SELECT AVG(s.total) AS average, STDDEV(s.total) AS standard_deviation FROM(" + stateGroupQuery +") s"
+            client.query(devAvgQuery, function(err, devAvgResult) {
+                done();
+                if(err) {
+                    return console.error('error running query', err);
+                }
+                var average = devAvgResult.rows[0].average;
+                var standardDeviation = devAvgResult.rows[0].standard_deviation;
+
+                var results = groupResult.rows.reduce(function(total, row) {
+                    var totalDonations = parseInt(row.total);
+                    var devDiff = devDiffResult(totalDonations);
+                    total[row.state] = {
+                        "total" : totalDonations,
+                        "devDiff" : devDiff
+                    };
+                    return total;
+                }, {});
+                function devDiffResult(totalDonations) {
+                    return (totalDonations - average) / standardDeviation;
+                }
+                console.log(results);
+                context.succeed(results);
+            });
+
         });
     });
 };
